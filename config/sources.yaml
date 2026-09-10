@@ -1,0 +1,21 @@
+# Only sources with a documented, open retrieval path are enabled. Add a government
+# facility export here only after documenting its license/terms in DATA_SOURCES.md.
+boundaries:
+  url: https://www.geoboundaries.org/api/current/gbOpen/IND/ADM2/
+  license: CC-BY-4.0
+  enabled: true
+population_2011:
+  url: https://censusindia.gov.in/nada/index.php/catalog/42557/download/46183/2011-IndiaStateDist-0000.xlsx
+  license: Government of India public data
+  enabled: true
+osm_facilities:
+  url: https://overpass-api.de/api/interpreter
+  license: ODbL-1.0
+  enabled: true
+  user_agent: "rh-access-india/1.0 (public-health research; contact: repository issues)"
+  query_timeout_seconds: 300
+government_csv:
+  # Optional, reviewed source files. Each entry needs url, state, source_name and
+  # field mapping. Disabled by default rather than claiming unavailable data is zero.
+  enabled: false
+  sources: []

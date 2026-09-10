@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A transparent, static comparison of mapped reproductive-health access indicators in Kerala and Uttar Pradesh.">
+    <title>Reproductive health access: Kerala and Uttar Pradesh</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha512-p4NxAoJBhIINfQp/4Yf7gK2Vf6yMU7f5m2e2URuBmfVxGTZk/L/7WkH14R8xqR6R9DmqwGXG5R0w0BUWLiL9uQ==" crossorigin="">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header>
+      <p class="eyebrow">Public data snapshot</p>
+      <h1>Reproductive health access, mapped</h1>
+      <p class="subtitle">Kerala and Uttar Pradesh — facility presence is not proof of accessible care.</p>
+    </header>
+    <main>
+      <aside aria-label="Map controls and data notes">
+        <section>
+          <h2>Explore</h2>
+          <label for="state-select">State</label>
+          <select id="state-select"><option value="all">Both states</option><option value="Kerala">Kerala</option><option value="Uttar Pradesh">Uttar Pradesh</option></select>
+          <label for="sector-select">Facility sector</label>
+          <select id="sector-select"><option value="all">All mapped sectors</option><option value="government">Government</option><option value="ngo">NGO</option><option value="private">Private</option></select>
+        </section>
+        <section>
+          <h2>Layers</h2>
+          <label><input type="radio" name="metric" value="facilities" checked> Facility points</label>
+          <label><input type="radio" name="metric" value="percapita"> Facilities per 100,000 people</label>
+          <label><input type="radio" name="metric" value="services"> Service-type coverage</label>
+          <label><input type="radio" name="metric" value="distance"> Straight-line distance to a mapped facility</label>
+          <p id="legend" class="legend">Loading data…</p>
+        </section>
+        <section class="notice">
+          <h2>Read this first</h2>
+          <p>“No data” is distinct from zero facilities. The published source currently includes an openly mapped supplemental directory; it is not a complete registry.</p>
+          <p>Distances are straight-line estimates, not travel time. Per-capita values use Census 2011 population.</p>
+        </section>
+        <section>
+          <h2>Refresh record</h2>
+          <dl id="refresh-status"><dt>Status</dt><dd>Loading…</dd></dl>
+          <p><a href="https://github.com/karishmadhingra30/health_access_mapping_india" target="_blank" rel="noreferrer">Code, methods, and source notes ↗</a></p>
+        </section>
+      </aside>
+      <div id="map" aria-label="Interactive map of reproductive health access"></div>
+    </main>
+    <footer>Basemap © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>; tiles © <a href="https://carto.com/attributions">CARTO</a>. Facility data retain their source attribution and licensing.</footer>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha512-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBoZQ+G7R8QbYlGZ6uYVfOf3KvKOq7Bh0EPo6KfS4P3yA==" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="map.js"></script>
+  </body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "refreshed_at": null,
+  "refresh_trigger": "manual GitHub Actions workflow_dispatch",
+  "facility_count": null,
+  "geocode_precision": {"exact": 0, "approximated": 0},
+  "sources": [],
+  "important_limitations": ["No successful data refresh has been published yet."]
+}

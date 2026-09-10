@@ -1,0 +1,38 @@
+family_planning:
+  - family planning
+  - family_planning
+  - contraception
+contraception_supply:
+  - contraceptive
+  - condoms
+  - oral contraceptive
+iud_insertion:
+  - iud
+  - iucd
+  - copper t
+sterilization:
+  - sterilization
+  - vasectomy
+  - tubectomy
+antenatal_care:
+  - antenatal
+  - prenatal
+delivery:
+  - delivery
+  - maternity
+  - childbirth
+emergency_obstetric:
+  - emergency obstetric
+  - emon
+post_abortion_care:
+  - post abortion
+mtp:
+  - medical termination
+  - abortion
+adolescent_health:
+  - adolescent
+  - youth friendly
+sti_treatment:
+  - sti
+  - std
+  - sexually transmitted

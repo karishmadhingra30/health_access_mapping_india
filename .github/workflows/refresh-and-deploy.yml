@@ -1,0 +1,56 @@
+name: Refresh data and deploy map
+
+on:
+  workflow_dispatch:
+    inputs:
+      refresh_note:
+        description: Optional note explaining this manual refresh
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  refresh-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Refresh public data snapshot
+        run: python -m pipeline.refresh --force
+      - name: Commit refreshed public data and metadata
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/output data/interim/refresh_metadata.json
+          if git diff --cached --quiet; then
+            echo "No published data changes."
+          else
+            git commit -m "Refresh published access-map data"
+            git push
+          fi
+      - name: Assemble static site
+        run: |
+          mkdir -p _site/data
+          cp -R site/. _site/
+          cp -R data/output/. _site/data/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
