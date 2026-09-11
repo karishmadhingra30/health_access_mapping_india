@@ -51,15 +51,18 @@ def get_boundaries(source: dict, force: bool) -> tuple[gpd.GeoDataFrame, gpd.Geo
     return states, districts, {"name": "geoBoundaries", "url": source["url"], "license": source["license"], "record_count": len(districts), "status": "retrieved"}
 
 
-def get_population(source: dict, force: bool) -> tuple[dict[tuple[str, str], int], dict]:
-    path = RAW / "census_2011_district_population.xlsx"
-    download(source["url"], path, force)
-    data = pd.read_excel(path, sheet_name="Data", dtype={"State": str, "District": str})
-    data = data[(data["Level"] == "DISTRICT") & (data["TRU"] == "Total")]
-    data["state"] = data["State"].str.zfill(2).map({"32": "Kerala", "09": "Uttar Pradesh"})
-    data = data.dropna(subset=["state"])
-    values = {(row.state, clean_name(row.Name)): int(row.TOT_P) for row in data.itertuples()}
-    return values, {"name": "Census of India, Basic Population Figures 2011", "url": source["url"], "license": source["license"], "record_count": len(values), "status": "retrieved"}
+def get_population(source: dict) -> tuple[dict[tuple[str, str], int], dict]:
+    """Use the reviewed, versioned district extract rather than a fragile live download.
+
+    Census 2011 is a fixed historical denominator, so it should not be fetched on
+    every refresh. The committed extract is traceable to the official workbook.
+    """
+    path = ROOT / source["reference_file"]
+    if not path.exists():
+        raise FileNotFoundError(f"Missing versioned Census reference table: {path}")
+    data = pd.read_csv(path)
+    values = {(row.state, clean_name(row.district)): int(row.population_2011) for row in data.itertuples()}
+    return values, {"name": "Census of India, Basic Population Figures 2011", "url": source["url"], "license": source["license"], "record_count": len(values), "status": "versioned reference extract"}
 
 
 def assign_districts(facilities: list[dict], districts: gpd.GeoDataFrame) -> list[dict]:
@@ -82,7 +85,7 @@ def run(force: bool) -> None:
         folder.mkdir(parents=True, exist_ok=True)
     refreshed_at = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     states, districts, boundary_report = get_boundaries(config["boundaries"], force)
-    population, population_report = get_population(config["population_2011"], force)
+    population, population_report = get_population(config["population_2011"])
     elements, osm_report = osm.collect(config["osm_facilities"], RAW, force)
     mapping = load_mapping(ROOT / "config/service_mapping.yaml")
     raw_facilities = [osm.to_facility(element) for element in elements]

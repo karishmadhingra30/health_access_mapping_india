@@ -22,7 +22,7 @@ The deployed URL will be `https://karishmadhingra30.github.io/health_access_mapp
 
 ## Current coverage statement
 
-The first source-enabled snapshot is intentionally conservative: it uses OpenStreetMap as an openly accessible supplemental directory, district boundaries from geoBoundaries, and Census 2011 denominators. It does **not** yet have an enabled facility-level government registry, NGO clinic directory, or vetted private-directory feed. Therefore it must not be interpreted as a complete count of facilities in either state.
+The first source-enabled snapshot is intentionally conservative: it uses OpenStreetMap as an openly accessible supplemental directory, district boundaries from geoBoundaries, and a versioned extract of official Census 2011 denominators. It does **not** yet have an enabled facility-level government registry, NGO clinic directory, or vetted private-directory feed. Therefore it must not be interpreted as a complete count of facilities in either state.
 
 There is no defensible coverage fraction yet: calculating one requires a reviewed official facility count for the same district, facility type, and boundary vintage. The project does not present an invented coverage percentage. Add a source only after running that single-district recall check and recording its outcome here.
 
