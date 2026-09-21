@@ -31,12 +31,22 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - name: Refresh public data snapshot
+        id: refresh
+        continue-on-error: true
+        env:
+          REFRESH_NOTE: ${{ inputs.refresh_note }}
         run: python -m pipeline.refresh --force
+      - name: Note refresh failure and continue deployment
+        if: steps.refresh.outcome != 'success'
+        run: |
+          echo "The live data refresh failed or was cancelled."
+          echo "Deploying the static site with the last committed public data and metadata."
       - name: Commit refreshed public data and metadata
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/output data/interim/refresh_metadata.json
+          git add data/output
           if git diff --cached --quiet; then
             echo "No published data changes."
           else

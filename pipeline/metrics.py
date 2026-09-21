@@ -1,23 +1,20 @@
 from __future__ import annotations
 
-import math
 from collections import Counter, defaultdict
 from typing import Any
 
 import geopandas as gpd
 import numpy as np
 from shapely.geometry import box
+from shapely.strtree import STRtree
 
 
 SERVICE_TAGS = ("family_planning", "contraception_supply", "iud_insertion", "sterilization", "antenatal_care", "delivery", "emergency_obstetric", "post_abortion_care", "mtp", "adolescent_health", "sti_treatment")
 
 
-def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    radius = 6371.0088
-    p1, p2 = math.radians(lat1), math.radians(lat2)
-    dphi, dlambda = math.radians(lat2 - lat1), math.radians(lon2 - lon1)
-    a = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlambda / 2) ** 2
-    return 2 * radius * math.asin(math.sqrt(a))
+def _utm_crs(longitude: float) -> str:
+    zone = int((longitude + 180) // 6) + 1
+    return f"EPSG:{32600 + zone}"
 
 
 def district_metrics(districts: gpd.GeoDataFrame, facilities: list[dict[str, Any]], population: dict[tuple[str, str], int]) -> gpd.GeoDataFrame:
@@ -47,15 +44,28 @@ def distance_grid(states: gpd.GeoDataFrame, facilities: list[dict[str, Any]], ce
     if not selected:
         return gpd.GeoDataFrame(rows, geometry=[], crs="EPSG:4326")
     for _, state in states.iterrows():
-        minx, miny, maxx, maxy = state.geometry.bounds
-        lat_step = cell_km / 110.574
-        lon_step = cell_km / (111.320 * math.cos(math.radians((miny + maxy) / 2)))
-        for x in np.arange(minx, maxx, lon_step):
-            for y in np.arange(miny, maxy, lat_step):
-                cell = box(x, y, x + lon_step, y + lat_step)
+        state_facilities = [f for f in selected if f.get("state") == state["state"]] or selected
+        crs = _utm_crs(state.geometry.centroid.x)
+        state_geom = gpd.GeoSeries([state.geometry], crs="EPSG:4326").to_crs(crs).iloc[0]
+        facility_points = gpd.GeoSeries(gpd.points_from_xy([f["longitude"] for f in state_facilities], [f["latitude"] for f in state_facilities]), crs="EPSG:4326").to_crs(crs)
+        tree = STRtree(list(facility_points))
+        cell_size_m = cell_km * 1000
+        minx, miny, maxx, maxy = state_geom.bounds
+        cells = []
+        centres = []
+        for x in np.arange(minx, maxx, cell_size_m):
+            for y in np.arange(miny, maxy, cell_size_m):
+                cell = box(x, y, x + cell_size_m, y + cell_size_m)
                 centre = cell.centroid
-                if not state.geometry.intersects(centre):
+                if not state_geom.intersects(centre):
                     continue
-                nearest = min(_haversine_km(centre.y, centre.x, f["latitude"], f["longitude"]) for f in selected)
-                rows.append({"state": state["state"], "distance_km": round(nearest, 2), "geometry": cell})
+                cells.append(cell)
+                centres.append(centre)
+        if not cells:
+            continue
+        nearest_indices = tree.nearest(centres)
+        projected = gpd.GeoSeries(cells, crs=crs).to_crs("EPSG:4326")
+        for cell, centre, nearest_index in zip(projected, centres, nearest_indices):
+            distance_km = centre.distance(facility_points.iloc[int(nearest_index)]) / 1000
+            rows.append({"state": state["state"], "distance_km": round(distance_km, 2), "geometry": cell})
     return gpd.GeoDataFrame(rows, geometry="geometry", crs="EPSG:4326")

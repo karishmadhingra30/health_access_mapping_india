@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -80,6 +82,7 @@ def assign_districts(facilities: list[dict], districts: gpd.GeoDataFrame) -> lis
 
 
 def run(force: bool) -> None:
+    started = time.monotonic()
     config = yaml.safe_load((ROOT / "config/sources.yaml").read_text(encoding="utf-8"))
     for folder in (RAW, OUTPUT, INTERIM):
         folder.mkdir(parents=True, exist_ok=True)
@@ -97,7 +100,12 @@ def run(force: bool) -> None:
     write_geodataframe(metric_districts, OUTPUT / "districts.geojson")
     write_geodataframe(grid, OUTPUT / "grid.geojson")
     exact = sum(item["geocode_precision"] == "exact" for item in facilities)
-    metadata = {"refreshed_at": refreshed_at, "refresh_trigger": "manual GitHub Actions workflow_dispatch", "facility_count": len(facilities),
+    source_reports = [boundary_report, population_report, osm_report]
+    source_warnings = [source for source in source_reports if source.get("status") in {"failed", "partial", "stale_cache_after_error"}]
+    metadata = {"refreshed_at": refreshed_at, "refresh_status": "completed_with_warnings" if source_warnings else "success",
+        "refresh_trigger": "manual GitHub Actions workflow_dispatch", "refresh_note": os.environ.get("REFRESH_NOTE") or None,
+        "workflow_run_id": os.environ.get("GITHUB_RUN_ID"), "git_sha": os.environ.get("GITHUB_SHA"), "elapsed_seconds": round(time.monotonic() - started, 2),
+        "facility_count": len(facilities),
         "geocode_precision": {"exact": exact, "approximated": len(facilities) - exact}, "sources": [boundary_report, population_report, osm_report],
         "important_limitations": ["OSM is a supplemental open directory, not a complete government facility registry.", "Distance is straight-line distance to a mapped facility, not travel time.", "Per-capita values use Census 2011 populations and may not match current district boundaries.", "Facility listing does not establish service availability, staffing, stockouts, hours, affordability, or quality."]}
     payload = json.dumps(metadata, indent=2)

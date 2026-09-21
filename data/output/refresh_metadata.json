@@ -1,6 +1,11 @@
 {
   "refreshed_at": null,
+  "refresh_status": "not_yet_refreshed",
   "refresh_trigger": "manual GitHub Actions workflow_dispatch",
+  "refresh_note": null,
+  "workflow_run_id": null,
+  "git_sha": null,
+  "elapsed_seconds": null,
   "facility_count": null,
   "geocode_precision": {"exact": 0, "approximated": 0},
   "sources": [],

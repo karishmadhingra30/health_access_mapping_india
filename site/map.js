@@ -20,7 +20,7 @@ function color(value, breaks, colors) {
   return colors.find((_, index) => value <= breaks[index]) || colors.at(-1);
 }
 function setLegend(text) { $('legend').textContent = text; }
-function removeOverlay() { if (activeOverlay) map.removeLayer(activeOverlay); activeOverlay = null; map.removeLayer(clusters); }
+function removeOverlay() { if (activeOverlay) map.removeLayer(activeOverlay); activeOverlay = null; map.removeLayer(clusters); clusters.clearLayers(); }
 function facilityPopup(p) {
   const services = p.services?.length ? p.services.map(escapeHtml).join(', ') : 'Not listed by source';
   return `<strong>${escapeHtml(p.name)}</strong><br>${escapeHtml(p.facility_type)} · ${escapeHtml(p.sector)}<br>${escapeHtml(p.district)}, ${escapeHtml(p.state)}<br><b>Services:</b> ${services}<br><b>Location:</b> ${escapeHtml(p.geocode_precision)}<br><a href="${escapeHtml(p.source_url)}" target="_blank" rel="noreferrer">View source ↗</a>`;
@@ -60,7 +60,8 @@ function zoomToState() {
 }
 function showMetadata(metadata) {
   datasets.metadata = metadata;
-  $('refresh-status').innerHTML = `<dt>Last successful refresh</dt><dd>${escapeHtml(metadata.refreshed_at || 'No successful refresh published yet')}</dd><dt>Mapped facilities</dt><dd>${escapeHtml(metadata.facility_count ?? 'No data')}</dd><dt>Location precision</dt><dd>${escapeHtml(metadata.geocode_precision?.exact ?? 0)} exact; ${escapeHtml(metadata.geocode_precision?.approximated ?? 0)} approximated</dd>`;
+  const sourceWarnings = (metadata.sources || []).filter(source => ['failed', 'partial', 'stale_cache_after_error'].includes(source.status));
+  $('refresh-status').innerHTML = `<dt>Refresh status</dt><dd>${escapeHtml(metadata.refresh_status || 'No successful refresh published yet')}</dd><dt>Last refresh attempt</dt><dd>${escapeHtml(metadata.refreshed_at || 'No successful refresh published yet')}</dd><dt>Mapped facilities</dt><dd>${escapeHtml(metadata.facility_count ?? 'No data')}</dd><dt>Location precision</dt><dd>${escapeHtml(metadata.geocode_precision?.exact ?? 0)} exact; ${escapeHtml(metadata.geocode_precision?.approximated ?? 0)} approximated</dd>${sourceWarnings.length ? `<dt>Source warnings</dt><dd>${sourceWarnings.map(source => escapeHtml(`${source.name}: ${source.status}`)).join('<br>')}</dd>` : ''}`;
 }
 Promise.all(['facilities', 'districts', 'grid', 'refresh_metadata'].map(name => fetch(`data/${name}.geojson`.replace('_metadata.geojson', '_metadata.json')).then(response => response.ok ? response.json() : Promise.reject(new Error(name))))).then(([facilities, districts, grid, metadata]) => { datasets = { facilities, districts, grid, metadata }; showMetadata(metadata); redraw(); }).catch(() => { $('refresh-status').innerHTML = '<dt>Status</dt><dd>No published refresh yet. Run the manual GitHub Actions refresh workflow.</dd>'; setLegend('Waiting for the first data snapshot.'); });
 document.querySelectorAll('input[name="metric"]').forEach(input => input.addEventListener('change', redraw));

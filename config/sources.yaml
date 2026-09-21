@@ -14,7 +14,8 @@ osm_facilities:
   license: ODbL-1.0
   enabled: true
   user_agent: "rh-access-india/1.0 (public-health research; contact: repository issues)"
-  query_timeout_seconds: 300
+  query_timeout_seconds: 180
+  request_timeout_seconds: 240
 government_csv:
   # Optional, reviewed source files. Each entry needs url, state, source_name and
   # field mapping. Disabled by default rather than claiming unavailable data is zero.
