@@ -33,6 +33,7 @@ jobs:
       - name: Refresh public data snapshot
         id: refresh
         continue-on-error: true
+        timeout-minutes: 5
         env:
           REFRESH_NOTE: ${{ inputs.refresh_note }}
         run: python -m pipeline.refresh --force

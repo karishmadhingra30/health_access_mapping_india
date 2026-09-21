@@ -74,7 +74,7 @@ For a cheaper local rerun, use `python -m pipeline.refresh` without `--force` so
 | Refresh trigger | Manual GitHub Actions trigger | Scheduled refresh | Gives control over when source snapshots change and avoids surprise costs or failures. |
 | Data audit trail | Commit generated public data | Store outputs only as build artifacts | Git history makes each published snapshot reviewable, but generated diffs can grow over time. |
 | Population source | Versioned Census 2011 extract | Live Census workbook download every run | Census 2011 is fixed historical data, so versioning is more reliable than repeated fragile downloads. |
-| Facility source baseline | OpenStreetMap via Overpass, split by state | Claiming official complete coverage or issuing one broad query | OSM is open and refreshable, but incomplete and uneven; smaller per-state queries are more reliable but still depend on public Overpass availability. |
+| Facility source baseline | OpenStreetMap via Overpass, split by state with bounded timeouts | Claiming official complete coverage or issuing one broad query | OSM is open and refreshable, but incomplete and uneven; smaller per-state queries are more reliable but still depend on public Overpass availability. |
 | Distance metric | Straight-line distance grid | Road travel time | Cheap to compute and explain, but it does not capture travel barriers, road quality, cost, or safety. |
 | Refresh failure handling | Deploy static shell with last committed public data | Fail the whole deployment when an optional source fails | Makes the public URL available and honest about status, but may show stale or placeholder data until a successful refresh lands. |
 | Bright Data role | Optional enrichment layer | Replacement source of truth | It can improve private/open-web facility discovery, but listings need dedupe, provenance, and bias labels. |
@@ -83,7 +83,7 @@ For a cheaper local rerun, use `python -m pipeline.refresh` without `--force` so
 
 1. Stabilize the first successful refresh.
 
-   The first pass now splits OpenStreetMap collection into separate Kerala and Uttar Pradesh requests, adds progress logs, uses source-level warning metadata, and builds the distance grid with a spatial index instead of comparing every grid cell against every facility. The remaining proof point is a successful GitHub Actions run.
+   The first pass now splits OpenStreetMap collection into separate Kerala and Uttar Pradesh requests, adds progress logs, uses source-level warning metadata, bounds the refresh step with a GitHub Actions timeout, and builds the distance grid with a spatial index instead of comparing every grid cell against every facility. The remaining proof point is a successful GitHub Actions run.
 
 2. Deploy the static site shell even when fresh data fails.
 
