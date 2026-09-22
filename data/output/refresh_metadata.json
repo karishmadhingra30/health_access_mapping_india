@@ -1,11 +1,11 @@
 {
-  "refreshed_at": "2026-09-21T23:53:14Z",
+  "refreshed_at": "2026-09-21T23:58:53Z",
   "refresh_status": "success",
   "refresh_trigger": "manual GitHub Actions workflow_dispatch",
-  "refresh_note": "resilient refresh and fallback site deploy",
-  "workflow_run_id": "35669541724",
-  "git_sha": "67b02339c63fed594d2b4c9160a7617a902298e6",
-  "elapsed_seconds": 233.26,
+  "refresh_note": "pages enabled with bounded refresh deploy",
+  "workflow_run_id": "35669941461",
+  "git_sha": "37cec5c4bdcb630d7598ae0fcffc35b1ff66d752",
+  "elapsed_seconds": 247.54,
   "facility_count": 2690,
   "geocode_precision": {
     "exact": 2690,
