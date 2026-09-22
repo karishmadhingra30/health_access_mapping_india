@@ -81,6 +81,27 @@ def assign_districts(facilities: list[dict], districts: gpd.GeoDataFrame) -> lis
     return output
 
 
+def write_metadata(metadata: dict) -> None:
+    payload = json.dumps(metadata, indent=2)
+    (OUTPUT / "refresh_metadata.json").write_text(payload, encoding="utf-8")
+    (INTERIM / "refresh_metadata.json").write_text(payload, encoding="utf-8")
+
+
+def previous_snapshot_metadata() -> dict | None:
+    metadata_path = OUTPUT / "refresh_metadata.json"
+    facilities_path = OUTPUT / "facilities.geojson"
+    if not metadata_path.exists() or not facilities_path.exists():
+        return None
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        facilities = json.loads(facilities_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    if not facilities.get("features") or not metadata.get("facility_count"):
+        return None
+    return metadata
+
+
 def run(force: bool) -> None:
     started = time.monotonic()
     config = yaml.safe_load((ROOT / "config/sources.yaml").read_text(encoding="utf-8"))
@@ -90,6 +111,34 @@ def run(force: bool) -> None:
     states, districts, boundary_report = get_boundaries(config["boundaries"], force)
     population, population_report = get_population(config["population_2011"])
     elements, osm_report = osm.collect(config["osm_facilities"], RAW, force)
+    source_reports = [boundary_report, population_report, osm_report]
+    if not elements and osm_report.get("status") == "failed":
+        previous = previous_snapshot_metadata()
+        if previous:
+            metadata = {**previous,
+                "refresh_status": "failed_preserved_previous_snapshot",
+                "last_attempted_refresh_at": refreshed_at,
+                "refresh_note": os.environ.get("REFRESH_NOTE") or None,
+                "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
+                "git_sha": os.environ.get("GITHUB_SHA"),
+                "elapsed_seconds": round(time.monotonic() - started, 2),
+                "sources": source_reports,
+                "preserved_snapshot": {
+                    "refreshed_at": previous.get("refreshed_at"),
+                    "workflow_run_id": previous.get("workflow_run_id"),
+                    "git_sha": previous.get("git_sha"),
+                    "facility_count": previous.get("facility_count"),
+                },
+                "important_limitations": [
+                    "The latest facility refresh failed, so the map is displaying the previous committed facility snapshot.",
+                    "OSM is a supplemental open directory, not a complete government facility registry.",
+                    "Distance is straight-line distance to a mapped facility, not travel time.",
+                    "Per-capita values use Census 2011 populations and may not match current district boundaries.",
+                    "Facility listing does not establish service availability, staffing, stockouts, hours, affordability, or quality.",
+                ],
+            }
+            write_metadata(metadata)
+            return
     mapping = load_mapping(ROOT / "config/service_mapping.yaml")
     raw_facilities = [osm.to_facility(element) for element in elements]
     raw_facilities = [facility for facility in raw_facilities if facility]
@@ -100,17 +149,14 @@ def run(force: bool) -> None:
     write_geodataframe(metric_districts, OUTPUT / "districts.geojson")
     write_geodataframe(grid, OUTPUT / "grid.geojson")
     exact = sum(item["geocode_precision"] == "exact" for item in facilities)
-    source_reports = [boundary_report, population_report, osm_report]
     source_warnings = [source for source in source_reports if source.get("status") in {"failed", "partial", "stale_cache_after_error"}]
     metadata = {"refreshed_at": refreshed_at, "refresh_status": "completed_with_warnings" if source_warnings else "success",
-        "refresh_trigger": "manual GitHub Actions workflow_dispatch", "refresh_note": os.environ.get("REFRESH_NOTE") or None,
+        "last_attempted_refresh_at": refreshed_at, "refresh_trigger": "manual GitHub Actions workflow_dispatch", "refresh_note": os.environ.get("REFRESH_NOTE") or None,
         "workflow_run_id": os.environ.get("GITHUB_RUN_ID"), "git_sha": os.environ.get("GITHUB_SHA"), "elapsed_seconds": round(time.monotonic() - started, 2),
         "facility_count": len(facilities),
         "geocode_precision": {"exact": exact, "approximated": len(facilities) - exact}, "sources": [boundary_report, population_report, osm_report],
         "important_limitations": ["OSM is a supplemental open directory, not a complete government facility registry.", "Distance is straight-line distance to a mapped facility, not travel time.", "Per-capita values use Census 2011 populations and may not match current district boundaries.", "Facility listing does not establish service availability, staffing, stockouts, hours, affordability, or quality."]}
-    payload = json.dumps(metadata, indent=2)
-    (OUTPUT / "refresh_metadata.json").write_text(payload, encoding="utf-8")
-    (INTERIM / "refresh_metadata.json").write_text(payload, encoding="utf-8")
+    write_metadata(metadata)
 
 
 if __name__ == "__main__":
