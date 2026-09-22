@@ -43,7 +43,7 @@ flowchart TD
 | Automation | GitHub Actions `workflow_dispatch` | Manual-only refreshes, matching the project requirement and avoiding scheduled compute cost; deployment continues with the last committed public data if an optional source fails. |
 | Data pipeline | Python | Practical for geospatial ETL, CSV handling, and source normalization. |
 | Geospatial processing | GeoPandas, Shapely, NumPy | Reads boundaries, joins points to districts, and builds derived map layers. |
-| Frontend map | Leaflet, MarkerCluster | Lightweight static map with facility clustering and district/grid overlays. |
+| Frontend map | Leaflet, MarkerCluster, OpenStreetMap standard tiles | Lightweight static map with facility clustering and district/grid overlays; the basemap does not require an API key. |
 | Data format | GeoJSON and JSON metadata | Easy for Leaflet to load directly and easy to audit in Git. |
 | Source documentation | `DATA_SOURCES.md` | Keeps licences, limitations, and enabled/disabled sources visible. |
 
@@ -76,6 +76,7 @@ For a cheaper local rerun, use `python -m pipeline.refresh` without `--force` so
 | Population source | Versioned Census 2011 extract | Live Census workbook download every run | Census 2011 is fixed historical data, so versioning is more reliable than repeated fragile downloads. |
 | Facility source baseline | OpenStreetMap via Overpass, split by state with bounded timeouts | Claiming official complete coverage or issuing one broad query | OSM is open and refreshable, but incomplete and uneven; smaller per-state queries are more reliable but still depend on public Overpass availability. |
 | Distance metric | Straight-line distance grid | Road travel time | Cheap to compute and explain, but it does not capture travel barriers, road quality, cost, or safety. |
+| Basemap provider | OpenStreetMap standard raster tiles | CARTO Positron basemap | Avoids exposing a public basemap API key in GitHub Pages, but it is a community-funded best-effort tile service, so the site must keep attribution visible and avoid bulk/offline tile fetching. |
 | Refresh failure handling | Deploy static shell and preserve the last committed facility snapshot when OSM fails completely or any required state fails | Fail the whole deployment, publish an empty layer, or publish a one-state comparison | Makes the public URL available and honest about status while avoiding accidental data loss or misleading Kerala-vs-UP comparisons during a source outage. |
 | Bright Data role | Optional enrichment layer | Replacement source of truth | It can improve private/open-web facility discovery, but listings need dedupe, provenance, and bias labels. |
 

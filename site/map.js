@@ -1,5 +1,8 @@
 const map = L.map('map', { scrollWheelZoom: true }).setView([23.8, 82.4], 5);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(map);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
 
 const clusters = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 48 });
 let datasets = { facilities: null, districts: null, grid: null, metadata: null };
