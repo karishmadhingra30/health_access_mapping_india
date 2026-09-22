@@ -102,6 +102,47 @@ def previous_snapshot_metadata() -> dict | None:
     return metadata
 
 
+def failed_osm_states(osm_report: dict) -> list[str]:
+    return [
+        state_report.get("state", "unknown")
+        for state_report in osm_report.get("state_reports", [])
+        if state_report.get("status") == "failed"
+    ]
+
+
+def preserve_previous_snapshot(
+    previous: dict,
+    refreshed_at: str,
+    started: float,
+    source_reports: list[dict],
+    reason: str,
+    refresh_status: str,
+) -> None:
+    metadata = {**previous,
+        "refresh_status": refresh_status,
+        "last_attempted_refresh_at": refreshed_at,
+        "refresh_note": os.environ.get("REFRESH_NOTE") or None,
+        "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
+        "git_sha": os.environ.get("GITHUB_SHA"),
+        "elapsed_seconds": round(time.monotonic() - started, 2),
+        "sources": source_reports,
+        "preserved_snapshot": {
+            "refreshed_at": previous.get("refreshed_at"),
+            "workflow_run_id": previous.get("workflow_run_id"),
+            "git_sha": previous.get("git_sha"),
+            "facility_count": previous.get("facility_count"),
+        },
+        "important_limitations": [
+            reason,
+            "OSM is a supplemental open directory, not a complete government facility registry.",
+            "Distance is straight-line distance to a mapped facility, not travel time.",
+            "Per-capita values use Census 2011 populations and may not match current district boundaries.",
+            "Facility listing does not establish service availability, staffing, stockouts, hours, affordability, or quality.",
+        ],
+    }
+    write_metadata(metadata)
+
+
 def run(force: bool) -> None:
     started = time.monotonic()
     config = yaml.safe_load((ROOT / "config/sources.yaml").read_text(encoding="utf-8"))
@@ -112,33 +153,28 @@ def run(force: bool) -> None:
     population, population_report = get_population(config["population_2011"])
     elements, osm_report = osm.collect(config["osm_facilities"], RAW, force)
     source_reports = [boundary_report, population_report, osm_report]
-    if not elements and osm_report.get("status") == "failed":
-        previous = previous_snapshot_metadata()
-        if previous:
-            metadata = {**previous,
-                "refresh_status": "failed_preserved_previous_snapshot",
-                "last_attempted_refresh_at": refreshed_at,
-                "refresh_note": os.environ.get("REFRESH_NOTE") or None,
-                "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
-                "git_sha": os.environ.get("GITHUB_SHA"),
-                "elapsed_seconds": round(time.monotonic() - started, 2),
-                "sources": source_reports,
-                "preserved_snapshot": {
-                    "refreshed_at": previous.get("refreshed_at"),
-                    "workflow_run_id": previous.get("workflow_run_id"),
-                    "git_sha": previous.get("git_sha"),
-                    "facility_count": previous.get("facility_count"),
-                },
-                "important_limitations": [
-                    "The latest facility refresh failed, so the map is displaying the previous committed facility snapshot.",
-                    "OSM is a supplemental open directory, not a complete government facility registry.",
-                    "Distance is straight-line distance to a mapped facility, not travel time.",
-                    "Per-capita values use Census 2011 populations and may not match current district boundaries.",
-                    "Facility listing does not establish service availability, staffing, stockouts, hours, affordability, or quality.",
-                ],
-            }
-            write_metadata(metadata)
-            return
+    previous = previous_snapshot_metadata()
+    if previous and not elements and osm_report.get("status") == "failed":
+        preserve_previous_snapshot(
+            previous,
+            refreshed_at,
+            started,
+            source_reports,
+            "The latest facility refresh failed, so the map is displaying the previous committed facility snapshot.",
+            "failed_preserved_previous_snapshot",
+        )
+        return
+    failed_states = failed_osm_states(osm_report)
+    if previous and failed_states:
+        preserve_previous_snapshot(
+            previous,
+            refreshed_at,
+            started,
+            source_reports,
+            f"The latest facility refresh failed for {', '.join(failed_states)}, so the map is displaying the previous committed facility snapshot instead of a partial state comparison.",
+            "partial_preserved_previous_snapshot",
+        )
+        return
     mapping = load_mapping(ROOT / "config/service_mapping.yaml")
     raw_facilities = [osm.to_facility(element) for element in elements]
     raw_facilities = [facility for facility in raw_facilities if facility]

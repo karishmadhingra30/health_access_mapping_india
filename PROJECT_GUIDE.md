@@ -76,7 +76,7 @@ For a cheaper local rerun, use `python -m pipeline.refresh` without `--force` so
 | Population source | Versioned Census 2011 extract | Live Census workbook download every run | Census 2011 is fixed historical data, so versioning is more reliable than repeated fragile downloads. |
 | Facility source baseline | OpenStreetMap via Overpass, split by state with bounded timeouts | Claiming official complete coverage or issuing one broad query | OSM is open and refreshable, but incomplete and uneven; smaller per-state queries are more reliable but still depend on public Overpass availability. |
 | Distance metric | Straight-line distance grid | Road travel time | Cheap to compute and explain, but it does not capture travel barriers, road quality, cost, or safety. |
-| Refresh failure handling | Deploy static shell and preserve the last committed facility snapshot when OSM returns no records | Fail the whole deployment or publish an empty facility layer | Makes the public URL available and honest about status while avoiding accidental data loss during a source outage. |
+| Refresh failure handling | Deploy static shell and preserve the last committed facility snapshot when OSM fails completely or any required state fails | Fail the whole deployment, publish an empty layer, or publish a one-state comparison | Makes the public URL available and honest about status while avoiding accidental data loss or misleading Kerala-vs-UP comparisons during a source outage. |
 | Bright Data role | Optional enrichment layer | Replacement source of truth | It can improve private/open-web facility discovery, but listings need dedupe, provenance, and bias labels. |
 
 ## Next steps
@@ -87,7 +87,7 @@ For a cheaper local rerun, use `python -m pipeline.refresh` without `--force` so
 
 2. Deploy the static site shell even when fresh data fails.
 
-   The workflow now continues past an optional refresh failure and deploys the static site with the last committed public data. If OSM fails completely and returns no records, the pipeline preserves the previous committed facility, district, and grid GeoJSON files and writes metadata with `refresh_status: failed_preserved_previous_snapshot`. The sidebar reads `refresh_status`, `refreshed_at`, `last_attempted_refresh_at`, facility counts, and source warnings from `refresh_metadata.json`.
+   The workflow now continues past an optional refresh failure and deploys the static site with the last committed public data. If OSM fails completely and returns no records, the pipeline preserves the previous committed facility, district, and grid GeoJSON files and writes metadata with `refresh_status: failed_preserved_previous_snapshot`. If one required state fails while another succeeds, the pipeline still preserves the previous full snapshot and writes `refresh_status: partial_preserved_previous_snapshot` instead of publishing a misleading one-state comparison. The sidebar reads `refresh_status`, `refreshed_at`, `last_attempted_refresh_at`, facility counts, and source warnings from `refresh_metadata.json`.
 
 3. Improve refresh metadata.
 
