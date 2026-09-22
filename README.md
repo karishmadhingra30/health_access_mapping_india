@@ -9,9 +9,11 @@ This project has no backend and is designed for the lowest-cost public deploymen
 1. Push this repository to its public GitHub remote.
 2. In **Settings → Pages**, select **GitHub Actions** as the build source if GitHub asks for a source.
 3. Open **Actions → Refresh data and deploy map → Run workflow**. This is the only refresh trigger; there is no schedule.
-4. The workflow attempts to retrieve a fresh source snapshot, writes `data/output/*.geojson` plus `refresh_metadata.json` when the refresh completes, commits those published data changes to `main`, and deploys the static site. If an optional live source fails, the workflow still deploys the site shell with the last committed public data and visible refresh metadata.
+4. The workflow attempts to retrieve a fresh source snapshot, writes `data/output/*.geojson` plus `refresh_metadata.json` when the refresh completes, commits those published data changes to `main`, and deploys the static site. If an optional live source fails, or if one required state fails while another succeeds, the workflow still deploys the site shell with the last committed full public data and visible refresh metadata.
 
 The deployed URL will be `https://karishmadhingra30.github.io/health_access_mapping_india/` once Pages has completed its first run. The committed output makes every published refresh reviewable in Git history. `refresh_metadata.json` records the exact refresh time, counts, location precision, source status, and limitations that apply to that snapshot.
+
+The frontend uses OpenStreetMap standard raster tiles for the basemap, so the public map does not require a browser-exposed basemap API key. Attribution is kept visible in the map and footer.
 
 ## What the map measures
 

@@ -84,15 +84,15 @@ For a cheaper local rerun, use `python -m pipeline.refresh` without `--force` so
 
 1. Stabilize the first successful refresh.
 
-   The first pass now splits OpenStreetMap collection into separate Kerala and Uttar Pradesh requests, adds progress logs, uses source-level warning metadata, bounds the refresh step with a GitHub Actions timeout, and builds the distance grid with a spatial index instead of comparing every grid cell against every facility. The remaining proof point is a successful GitHub Actions run.
+   Completed for the current static build. OpenStreetMap collection is split into separate Kerala and Uttar Pradesh requests, refresh status is captured in source-level metadata, the workflow bounds the refresh step with a GitHub Actions timeout, and the distance grid uses a spatial index instead of comparing every grid cell against every facility. Verified manual runs now deploy the public site even when a source refresh is partial.
 
 2. Deploy the static site shell even when fresh data fails.
 
    The workflow now continues past an optional refresh failure and deploys the static site with the last committed public data. If OSM fails completely and returns no records, the pipeline preserves the previous committed facility, district, and grid GeoJSON files and writes metadata with `refresh_status: failed_preserved_previous_snapshot`. If one required state fails while another succeeds, the pipeline still preserves the previous full snapshot and writes `refresh_status: partial_preserved_previous_snapshot` instead of publishing a misleading one-state comparison. The sidebar reads `refresh_status`, `refreshed_at`, `last_attempted_refresh_at`, facility counts, and source warnings from `refresh_metadata.json`.
 
-3. Improve refresh metadata.
+3. Improve refresh metadata further.
 
-   Expand `refresh_metadata.json` to include workflow run ID, git commit SHA, source-level success or failure, query timestamps, elapsed time, record counts before and after dedupe, and the refresh note entered in GitHub Actions.
+   The current metadata already includes workflow run ID, git commit SHA, source-level success or failure, elapsed time, record counts, the refresh note entered in GitHub Actions, the data snapshot timestamp, and the last attempted refresh timestamp. A future pass should add record counts before and after dedupe, per-state/district sanity thresholds, and clearer machine-readable error categories.
 
 4. Add source-quality controls.
 
