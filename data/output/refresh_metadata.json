@@ -1,11 +1,11 @@
 {
   "refreshed_at": "2026-09-21T23:58:53Z",
-  "refresh_status": "partial_preserved_previous_snapshot",
+  "refresh_status": "failed_preserved_previous_snapshot",
   "refresh_trigger": "manual GitHub Actions workflow_dispatch",
-  "refresh_note": "verify partial-state preservation",
-  "workflow_run_id": "35761334294",
-  "git_sha": "0f9cf643a49db9cad6cbdd5ed6fcd64c0aa3d45f",
-  "elapsed_seconds": 38.35,
+  "refresh_note": "switch basemap to no-key OpenStreetMap tiles",
+  "workflow_run_id": "35763462972",
+  "git_sha": "f6befca78e0300c463f169838684d19762b15db5",
+  "elapsed_seconds": 26.0,
   "facility_count": 2690,
   "geocode_precision": {
     "exact": 2690,
@@ -30,12 +30,13 @@
       "name": "OpenStreetMap / Overpass",
       "url": "https://overpass-api.de/api/interpreter",
       "license": "ODbL-1.0",
-      "record_count": 8095,
+      "record_count": 0,
       "state_reports": [
         {
           "state": "Kerala",
-          "record_count": 8095,
-          "status": "retrieved"
+          "record_count": 0,
+          "status": "failed",
+          "error": "HTTPError: 504 Server Error: Gateway Timeout for url: https://overpass-api.de/api/interpreter"
         },
         {
           "state": "Uttar Pradesh",
@@ -44,21 +45,21 @@
           "error": "HTTPError: 504 Server Error: Gateway Timeout for url: https://overpass-api.de/api/interpreter"
         }
       ],
-      "status": "partial"
+      "status": "failed"
     }
   ],
   "important_limitations": [
-    "The latest facility refresh failed for Uttar Pradesh, so the map is displaying the previous committed facility snapshot instead of a partial state comparison.",
+    "The latest facility refresh failed, so the map is displaying the previous committed facility snapshot.",
     "OSM is a supplemental open directory, not a complete government facility registry.",
     "Distance is straight-line distance to a mapped facility, not travel time.",
     "Per-capita values use Census 2011 populations and may not match current district boundaries.",
     "Facility listing does not establish service availability, staffing, stockouts, hours, affordability, or quality."
   ],
-  "last_attempted_refresh_at": "2026-09-22T17:33:32Z",
+  "last_attempted_refresh_at": "2026-09-22T17:53:11Z",
   "preserved_snapshot": {
     "refreshed_at": "2026-09-21T23:58:53Z",
-    "workflow_run_id": "35669941461",
-    "git_sha": "37cec5c4bdcb630d7598ae0fcffc35b1ff66d752",
+    "workflow_run_id": "35761334294",
+    "git_sha": "0f9cf643a49db9cad6cbdd5ed6fcd64c0aa3d45f",
     "facility_count": 2690
   }
 }
